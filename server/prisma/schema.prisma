@@ -1,0 +1,35 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// prisma/schema.prisma
+
+model User {
+  id            Int      @id @default(autoincrement())
+  email         String   @unique
+  password      String
+  role          Role
+  accessToken   String?  // Optional olarak işaretlenebilir
+  refreshToken  String?  // Optional olarak işaretlenebilir
+  tokenExpiresAt DateTime? // Access Token'ın geçerlilik süresi
+  refreshExpiresAt DateTime? // Refresh Token'ın geçerlilik süresi
+}
+enum Role {
+  VIEWER
+  EDITOR
+  ADMIN
+  SUPERADMIN
+}
+
+model Task {
+  id       Int      @id @default(autoincrement())
+  title    String
+  content  String
+}
+
+
