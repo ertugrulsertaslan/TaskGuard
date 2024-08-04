@@ -50,11 +50,11 @@ app.post("/login", async (req, res) => {
   });
   const isMatch = await bcrypt.compare(password, user.password);
   if (!user || !isMatch) {
-    return res.status(401).send("Geçersiz kimlik bilgileri");
+    return res.status(401).send("Email or Password wrong");
   }
 
   const accessToken = jwt.sign({ userId: user.id }, ACCESS_SECRET_TOKEN, {
-    expiresIn: "15m",
+    expiresIn: "10m",
   });
   const refreshToken = jwt.sign({ userId: user.id }, REFRESH_SECRET_TOKEN, {
     expiresIn: "7d",
@@ -65,8 +65,6 @@ app.post("/login", async (req, res) => {
     data: {
       accessToken: accessToken,
       refreshToken: refreshToken,
-      tokenExpiresAt: new Date(Date.now() + 15 * 60 * 1000),
-      refreshExpiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     },
   });
 
@@ -76,7 +74,58 @@ app.post("/login", async (req, res) => {
     role: user.role,
   });
 });
+app.post("/refresh-token", async (req, res) => {
+  const { refreshToken } = req.body;
 
+  if (!refreshToken) {
+    return res.sendStatus(401);
+  }
+
+  try {
+    const user = await prisma.user.findFirst({
+      where: { refreshToken: refreshToken },
+    });
+
+    if (!user) {
+      return res.sendStatus(401);
+    }
+
+    jwt.verify(
+      refreshToken,
+      process.env.REFRESH_SECRET_TOKEN,
+      (err, decoded) => {
+        if (err) {
+          console.error(err);
+          return res.status(403).json({ error: "Invalid refresh token" });
+        }
+
+        const accessToken = jwt.sign(
+          { email: decoded.email, username: decoded.username },
+          process.env.ACCESS_SECRET_TOKEN,
+          { expiresIn: "10m" }
+        );
+
+        prisma.user
+          .update({
+            where: { id: user.id },
+            data: {
+              accessToken: accessToken,
+            },
+          })
+          .then(() => {
+            return res.status(200).json({ accessToken: accessToken });
+          })
+          .catch((error) => {
+            console.error("Error updating accessToken in database:", error);
+            return res.status(500).json({ error: "Internal Server Error" });
+          });
+      }
+    );
+  } catch (error) {
+    console.error("Error fetching user from database:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 app.get("/tasks", async (req, res) => {
   const tasks = await prisma.task.findMany();
   const users = await prisma.user.findMany();

@@ -16,9 +16,9 @@ function Login() {
     };
     try {
       const response = await axios.post("http://localhost:5000/login", data);
-
       localStorage.setItem("role", response.data.role);
-
+      localStorage.setItem("accessToken", response.data.accessToken);
+      localStorage.setItem("refreshToken", response.data.refreshToken);
       navigate("/tasks");
     } catch (error) {
       console.error(

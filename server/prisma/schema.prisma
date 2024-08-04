@@ -14,10 +14,8 @@ model User {
   email         String   @unique
   password      String
   role          Role
-  accessToken   String?  // Optional olarak işaretlenebilir
-  refreshToken  String?  // Optional olarak işaretlenebilir
-  tokenExpiresAt DateTime? // Access Token'ın geçerlilik süresi
-  refreshExpiresAt DateTime? // Refresh Token'ın geçerlilik süresi
+  accessToken   String?  
+  refreshToken  String? 
 }
 enum Role {
   VIEWER

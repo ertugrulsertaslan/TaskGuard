@@ -10,7 +10,23 @@ function Tasks() {
   const [users, setUsers] = useState([]);
   const [selectedRoles, setSelectedRoles] = useState({});
   const role = localStorage.getItem("role");
-
+  const refreshToken = localStorage.getItem("refreshToken");
+  useEffect(() => {
+    const fetchToken = async () => {
+      try {
+        await axios.post("http://localhost:5000/refresh-token", {
+          refreshToken: refreshToken,
+        });
+      } catch (error) {
+        console.error(
+          "Error fetching tasks:",
+          error.response ? error.response.data : error.message
+        );
+      }
+    };
+    const intervalId = setInterval(fetchToken, 9 * 60 * 1000);
+    return () => clearInterval(intervalId);
+  }, []);
   useEffect(() => {
     const fetchTasks = async () => {
       try {
@@ -32,7 +48,6 @@ function Tasks() {
 
     fetchTasks();
   }, []);
-  console.log(selectedRoles);
   const handleTasks = async (e) => {
     e.preventDefault();
 
@@ -232,6 +247,7 @@ function Tasks() {
                 <div key={user.id}>
                   <p>{user.email}</p>
                   <p>{user.role}</p>
+                  <p>{user.accessToken}</p>
                   <select
                     name="role"
                     value={selectedRoles[user.id] || user.role}
