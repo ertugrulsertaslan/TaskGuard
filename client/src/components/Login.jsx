@@ -7,6 +7,12 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+
+  const api = axios.create({
+    baseURL: "http://localhost:5000",
+    withCredentials: true,
+  });
+
   const handleLogin = async (e) => {
     e.preventDefault();
 
@@ -15,11 +21,10 @@ function Login() {
       password: password,
     };
     try {
-      const response = await axios.post("http://localhost:5000/login", data);
+      const response = await api.post("/login", data);
       localStorage.setItem("role", response.data.role);
-      localStorage.setItem("accessToken", response.data.accessToken);
-      localStorage.setItem("refreshToken", response.data.refreshToken);
-      navigate("/tasks");
+
+      navigate("/");
     } catch (error) {
       console.error(
         "Error:",
@@ -29,6 +34,7 @@ function Login() {
   };
   return (
     <>
+      <h2>Login Page</h2>
       <form onSubmit={handleLogin}>
         <div>
           <label>Email:</label>

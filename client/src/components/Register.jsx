@@ -26,6 +26,7 @@ function Register() {
   };
   return (
     <>
+      <h2>Register Page</h2>
       <form onSubmit={handleRegister}>
         <div>
           <label>Email:</label>
