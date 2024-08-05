@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import authMiddleware from "./utils/authMiddleWare.js";
 
 const PORT = 5000;
 const ACCESS_SECRET_TOKEN = process.env.ACCESS_SECRET_TOKEN;
@@ -80,7 +81,7 @@ app.post("/login", async (req, res) => {
     role: user.role,
   });
 });
-app.post("/refresh-token", (req, res) => {
+app.post("/refresh-token", authMiddleware, (req, res) => {
   const { refreshToken } = req.cookies;
   if (!refreshToken) {
     return res.sendStatus(401);
@@ -106,15 +107,15 @@ app.post("/refresh-token", (req, res) => {
     return res.status(500).json({ error: "Internal Server Error" });
   }
 });
-app.get("/tasks", async (req, res) => {
+app.get("/tasks", authMiddleware, async (req, res) => {
   const tasks = await prisma.task.findMany();
   res.json(tasks);
 });
-app.get("/user", async (req, res) => {
+app.get("/user", authMiddleware, async (req, res) => {
   const users = await prisma.user.findMany();
   res.json(users);
 });
-app.post("/tasks", async (req, res) => {
+app.post("/tasks", authMiddleware, async (req, res) => {
   const { title, content } = req.body;
   const task = await prisma.task.create({
     data: {
@@ -126,7 +127,7 @@ app.post("/tasks", async (req, res) => {
   res.json(task);
 });
 
-app.put("/tasks/:id", async (req, res) => {
+app.put("/tasks/:id", authMiddleware, async (req, res) => {
   const { id } = req.params;
   const { title, content } = req.body;
   const task = await prisma.task.update({
@@ -139,7 +140,7 @@ app.put("/tasks/:id", async (req, res) => {
 
   res.json(task);
 });
-app.delete("/tasks/:id", async (req, res) => {
+app.delete("/tasks/:id", authMiddleware, async (req, res) => {
   const { id } = req.params;
   await prisma.task.delete({
     where: { id: parseInt(id) },
@@ -147,7 +148,7 @@ app.delete("/tasks/:id", async (req, res) => {
 
   res.json({ message: "Task deleted" });
 });
-app.put("/tasks/users/:id", async (req, res) => {
+app.put("/tasks/users/:id", authMiddleware, async (req, res) => {
   const { id } = req.params;
   const { role } = req.body;
   const user = await prisma.user.update({
