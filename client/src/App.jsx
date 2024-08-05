@@ -1,36 +1,22 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
-
 import "./App.css";
-
+import { Link } from "react-router-dom";
 function App() {
-  const [data, setData] = useState([]);
-  const api = axios.create({
-    baseURL: "http://localhost:3000",
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem("token")}`,
-    },
-  });
-
-  // Taskları al
-  const fetchTasks = async () => {
-    try {
-      const response = await api.get("/tasks");
-      setData(response.data);
-    } catch (error) {
-      console.error("Error fetching tasks:", error);
-    }
-  };
-  /*
-  {data &&
-        data.map((item, index) => {
-          <div key={index}>
-            <p>{item.title}</p>
-            <p>{item.content}</p>
-          </div>;
-        })}
-  */
-  return <></>;
+  return (
+    <>
+      <h2>HomePage</h2>
+      <div>
+        <div>
+          <Link to="/login">Login</Link>
+        </div>
+        <div>
+          <Link to="/tasks">Tasks</Link>
+        </div>
+        <div>
+          <Link to="/register">Register</Link>
+        </div>
+      </div>
+    </>
+  );
 }
 
 export default App;
