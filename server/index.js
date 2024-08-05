@@ -3,6 +3,8 @@ import { PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import cors from "cors";
+import cookieParser from "cookie-parser";
+
 const PORT = 5000;
 const ACCESS_SECRET_TOKEN = process.env.ACCESS_SECRET_TOKEN;
 const REFRESH_SECRET_TOKEN = process.env.REFRESH_SECRET_TOKEN;
@@ -11,8 +13,10 @@ const prisma = new PrismaClient();
 app.use(
   cors({
     origin: "http://localhost:5173",
+    credentials: true,
   })
 );
+app.use(cookieParser());
 
 app.use(express.json());
 
@@ -60,67 +64,43 @@ app.post("/login", async (req, res) => {
     expiresIn: "7d",
   });
 
-  await prisma.user.update({
-    where: { id: user.id },
-    data: {
-      accessToken: accessToken,
-      refreshToken: refreshToken,
-    },
+  res.cookie("accessToken", accessToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "Strict",
+    maxAge: 10 * 60 * 1000,
   });
-
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "Strict",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
   res.json({
-    accessToken,
-    refreshToken,
     role: user.role,
   });
 });
-app.post("/refresh-token", async (req, res) => {
-  const { refreshToken } = req.body;
-
+app.post("/refresh-token", (req, res) => {
+  const { refreshToken } = req.cookies;
   if (!refreshToken) {
     return res.sendStatus(401);
   }
-
   try {
-    const user = await prisma.user.findFirst({
-      where: { refreshToken: refreshToken },
+    jwt.verify(refreshToken, process.env.REFRESH_SECRET_TOKEN, (err, user) => {
+      if (err) return res.sendStatus(403);
+
+      const newAccessToken = jwt.sign(
+        { userId: user.userId },
+        process.env.ACCESS_SECRET_TOKEN,
+        { expiresIn: "10m" }
+      );
+      res.cookie("accessToken", newAccessToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "Strict",
+        maxAge: 10 * 60 * 1000,
+      });
     });
-
-    if (!user) {
-      return res.sendStatus(401);
-    }
-
-    jwt.verify(
-      refreshToken,
-      process.env.REFRESH_SECRET_TOKEN,
-      (err, decoded) => {
-        if (err) {
-          console.error(err);
-          return res.status(403).json({ error: "Invalid refresh token" });
-        }
-
-        const accessToken = jwt.sign(
-          { email: decoded.email, username: decoded.username },
-          process.env.ACCESS_SECRET_TOKEN,
-          { expiresIn: "10m" }
-        );
-
-        prisma.user
-          .update({
-            where: { id: user.id },
-            data: {
-              accessToken: accessToken,
-            },
-          })
-          .then(() => {
-            return res.status(200).json({ accessToken: accessToken });
-          })
-          .catch((error) => {
-            console.error("Error updating accessToken in database:", error);
-            return res.status(500).json({ error: "Internal Server Error" });
-          });
-      }
-    );
   } catch (error) {
     console.error("Error fetching user from database:", error);
     return res.status(500).json({ error: "Internal Server Error" });
@@ -128,8 +108,11 @@ app.post("/refresh-token", async (req, res) => {
 });
 app.get("/tasks", async (req, res) => {
   const tasks = await prisma.task.findMany();
+  res.json(tasks);
+});
+app.get("/user", async (req, res) => {
   const users = await prisma.user.findMany();
-  res.json({ tasks, users });
+  res.json(users);
 });
 app.post("/tasks", async (req, res) => {
   const { title, content } = req.body;
@@ -139,6 +122,7 @@ app.post("/tasks", async (req, res) => {
       content,
     },
   });
+
   res.json(task);
 });
 
@@ -152,6 +136,7 @@ app.put("/tasks/:id", async (req, res) => {
       content,
     },
   });
+
   res.json(task);
 });
 app.delete("/tasks/:id", async (req, res) => {
@@ -159,6 +144,7 @@ app.delete("/tasks/:id", async (req, res) => {
   await prisma.task.delete({
     where: { id: parseInt(id) },
   });
+
   res.json({ message: "Task deleted" });
 });
 app.put("/tasks/users/:id", async (req, res) => {
