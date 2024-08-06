@@ -3,6 +3,17 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import User from "./User";
 import "../App.css";
+import {
+  Container,
+  TextField,
+  Button,
+  Typography,
+  Card,
+  CardContent,
+  CardActions,
+  Grid,
+  Snackbar,
+} from "@mui/material";
 
 function Tasks() {
   const [title, setTitle] = useState("");
@@ -53,14 +64,22 @@ function Tasks() {
     };
     try {
       if (selectedTask) {
-        await axios.put(`http://localhost:5000/tasks/${selectedTask.id}`, data);
+        await axios.put(
+          `http://localhost:5000/tasks/${selectedTask.id}`,
+          data,
+          {
+            withCredentials: true,
+          }
+        );
         setTasks((prevTasks) =>
           prevTasks.map((task) =>
             task.id === selectedTask.id ? { ...task, ...data } : task
           )
         );
       } else {
-        const response = await axios.post("http://localhost:5000/tasks", data);
+        const response = await axios.post("http://localhost:5000/tasks", data, {
+          withCredentials: true,
+        });
         setTasks((prevTasks) => [...prevTasks, response.data]);
       }
       setTitle("");
@@ -76,7 +95,9 @@ function Tasks() {
 
   const handleDelete = async (taskId) => {
     try {
-      await axios.delete(`http://localhost:5000/tasks/${taskId}`);
+      await axios.delete(`http://localhost:5000/tasks/${taskId}`, {
+        withCredentials: true,
+      });
       setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
     } catch (error) {
       console.error(
@@ -101,57 +122,90 @@ function Tasks() {
   return (
     <>
       {role === "SUPERADMIN" && <User />}
-
-      {canViewTasks && (
-        <div>
-          {canEditTasks && (
-            <form onSubmit={handleTasks}>
-              <div>
-                <label>Title:</label>
-                <input
-                  type="text"
+      <Container>
+        {canViewTasks && (
+          <>
+            {canEditTasks && (
+              <form onSubmit={handleTasks}>
+                <Typography variant="h6" gutterBottom>
+                  {selectedTask ? "Update Task" : "Create Task"}
+                </Typography>
+                <TextField
+                  label="Title"
+                  variant="outlined"
+                  fullWidth
+                  margin="normal"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                 />
-              </div>
-              <div>
-                <label>Content:</label>
-                <input
-                  type="text"
+                <TextField
+                  label="Content"
+                  variant="outlined"
+                  fullWidth
+                  margin="normal"
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                 />
-              </div>
-              <button type="submit">
-                {selectedTask ? "Update Task" : "Create Task"}
-              </button>
-            </form>
-          )}
-
-          <div>
-            {tasks && tasks.length > 0 ? (
-              tasks.map((task) => (
-                <div key={task.id}>
-                  <p>{task.title}</p>
-                  <p>{task.content}</p>
-                  {canEditTasks && (
-                    <button onClick={() => handleSelectTask(task)}>
-                      UPDATE
-                    </button>
-                  )}
-                  {canDeleteTasks && (
-                    <button onClick={() => handleDelete(task.id)}>
-                      DELETE
-                    </button>
-                  )}
-                </div>
-              ))
-            ) : (
-              <p>No tasks available</p>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  style={{ marginTop: "16px" }}
+                >
+                  {selectedTask ? "Update Task" : "Create Task"}
+                </Button>
+              </form>
             )}
-          </div>
-        </div>
-      )}
+
+            <Grid container spacing={2} style={{ marginTop: "16px" }}>
+              {tasks && tasks.length > 0 ? (
+                tasks.map((task) => (
+                  <Grid item xs={12} sm={6} md={6} key={task.id}>
+                    <Card>
+                      <CardContent>
+                        <Typography variant="h6">{task.title}</Typography>
+                        <Typography variant="body2">{task.content}</Typography>
+                      </CardContent>
+                      <CardActions
+                        sx={{
+                          display: "flex",
+                          justifyContent: "center",
+                          mb: 2,
+                        }}
+                      >
+                        {canEditTasks && (
+                          <Button
+                            size="small"
+                            color="primary"
+                            variant="contained"
+                            onClick={() => handleSelectTask(task)}
+                          >
+                            Update
+                          </Button>
+                        )}
+                        {canDeleteTasks && (
+                          <Button
+                            size="small"
+                            variant="contained"
+                            color="secondary"
+                            onClick={() => handleDelete(task.id)}
+                          >
+                            Delete
+                          </Button>
+                        )}
+                      </CardActions>
+                    </Card>
+                  </Grid>
+                ))
+              ) : (
+                <Grid item xs={12}>
+                  <Typography variant="body1">No tasks available</Typography>
+                </Grid>
+              )}
+            </Grid>
+          </>
+        )}
+      </Container>
     </>
   );
 }

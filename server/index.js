@@ -148,7 +148,7 @@ app.delete("/tasks/:id", authMiddleware, async (req, res) => {
 
   res.json({ message: "Task deleted" });
 });
-app.put("/tasks/users/:id", authMiddleware, async (req, res) => {
+app.put("/users/:id", authMiddleware, async (req, res) => {
   const { id } = req.params;
   const { role } = req.body;
   const user = await prisma.user.update({
