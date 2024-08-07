@@ -58,12 +58,20 @@ app.post("/login", async (req, res) => {
     return res.status(401).send("Email or Password wrong");
   }
 
-  const accessToken = jwt.sign({ userId: user.id }, ACCESS_SECRET_TOKEN, {
-    expiresIn: "10m",
-  });
-  const refreshToken = jwt.sign({ userId: user.id }, REFRESH_SECRET_TOKEN, {
-    expiresIn: "7d",
-  });
+  const accessToken = jwt.sign(
+    { userId: user.id, userRole: user.role },
+    ACCESS_SECRET_TOKEN,
+    {
+      expiresIn: "10m",
+    }
+  );
+  const refreshToken = jwt.sign(
+    { userId: user.id, userRole: user.role },
+    REFRESH_SECRET_TOKEN,
+    {
+      expiresIn: "7d",
+    }
+  );
 
   res.cookie("accessToken", accessToken, {
     httpOnly: true,
@@ -81,76 +89,104 @@ app.post("/login", async (req, res) => {
     role: user.role,
   });
 });
-app.post("/refresh-token", authMiddleware, (req, res) => {
-  const { refreshToken } = req.cookies;
-  if (!refreshToken) {
-    return res.sendStatus(401);
-  }
-  try {
-    jwt.verify(refreshToken, process.env.REFRESH_SECRET_TOKEN, (err, user) => {
-      if (err) return res.sendStatus(403);
+app.post(
+  "/refresh-token",
+  authMiddleware(["VIEWER", "EDITOR", "ADMIN", "SUPERADMIN"]),
+  (req, res) => {
+    const { refreshToken } = req.cookies;
+    if (!refreshToken) {
+      return res.sendStatus(401);
+    }
+    try {
+      jwt.verify(
+        refreshToken,
+        process.env.REFRESH_SECRET_TOKEN,
+        (err, user) => {
+          if (err) return res.sendStatus(403);
 
-      const newAccessToken = jwt.sign(
-        { userId: user.userId },
-        process.env.ACCESS_SECRET_TOKEN,
-        { expiresIn: "10m" }
+          const newAccessToken = jwt.sign(
+            { userId: user.userId, userRole: user.role },
+            process.env.ACCESS_SECRET_TOKEN,
+            { expiresIn: "10m" }
+          );
+          res.cookie("accessToken", newAccessToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "Strict",
+            maxAge: 10 * 60 * 1000,
+          });
+        }
       );
-      res.cookie("accessToken", newAccessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "Strict",
-        maxAge: 10 * 60 * 1000,
-      });
-    });
-  } catch (error) {
-    console.error("Error fetching user from database:", error);
-    return res.status(500).json({ error: "Internal Server Error" });
+    } catch (error) {
+      console.error("Error fetching user from database:", error);
+      return res.status(500).json({ error: "Internal Server Error" });
+    }
   }
-});
-app.get("/tasks", authMiddleware, async (req, res) => {
-  const tasks = await prisma.task.findMany();
-  res.json(tasks);
-});
-app.get("/user", authMiddleware, async (req, res) => {
+);
+app.get(
+  "/tasks",
+  authMiddleware(["VIEWER", "EDITOR", "ADMIN", "SUPERADMIN"]),
+  async (req, res) => {
+    const tasks = await prisma.task.findMany();
+    res.json(tasks);
+  }
+);
+app.get("/user", authMiddleware(["SUPERADMIN"]), async (req, res) => {
   const users = await prisma.user.findMany();
   res.json(users);
 });
-app.post("/tasks", authMiddleware, async (req, res) => {
-  const { title, content } = req.body;
-  const task = await prisma.task.create({
-    data: {
-      title,
-      content,
-    },
-  });
+app.post(
+  "/tasks",
+  authMiddleware(["EDITOR", "ADMIN", "SUPERADMIN"]),
+  async (req, res) => {
+    const { title, content } = req.body;
 
-  res.json(task);
-});
+    const task = await prisma.task.create({
+      data: {
+        title,
+        content,
+      },
+    });
 
-app.put("/tasks/:id", authMiddleware, async (req, res) => {
-  const { id } = req.params;
-  const { title, content } = req.body;
-  const task = await prisma.task.update({
-    where: { id: parseInt(id) },
-    data: {
-      title,
-      content,
-    },
-  });
+    res.json(task);
+  }
+);
 
-  res.json(task);
-});
-app.delete("/tasks/:id", authMiddleware, async (req, res) => {
-  const { id } = req.params;
-  await prisma.task.delete({
-    where: { id: parseInt(id) },
-  });
+app.put(
+  "/tasks/:id",
+  authMiddleware(["EDITOR", "ADMIN", "SUPERADMIN"]),
+  async (req, res) => {
+    const { id } = req.params;
+    const { title, content } = req.body;
 
-  res.json({ message: "Task deleted" });
-});
-app.put("/users/:id", authMiddleware, async (req, res) => {
+    const task = await prisma.task.update({
+      where: { id: parseInt(id) },
+      data: {
+        title,
+        content,
+      },
+    });
+
+    res.json(task);
+  }
+);
+app.delete(
+  "/tasks/:id",
+  authMiddleware(["ADMIN", "SUPERADMIN"]),
+  async (req, res) => {
+    const { id } = req.params;
+
+    await prisma.task.delete({
+      where: { id: parseInt(id) },
+    });
+
+    res.json({ message: "Task deleted" });
+  }
+);
+app.put("/users/:id", authMiddleware(["SUPERADMIN"]), async (req, res) => {
   const { id } = req.params;
   const { role } = req.body;
+
   const user = await prisma.user.update({
     where: { id: parseInt(id) },
     data: {
