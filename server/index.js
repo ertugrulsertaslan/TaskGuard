@@ -87,6 +87,7 @@ app.post("/login", async (req, res) => {
   });
   res.json({
     role: user.role,
+    userId: user.id,
   });
 });
 app.post(
@@ -129,6 +130,21 @@ app.get(
   async (req, res) => {
     const tasks = await prisma.task.findMany();
     res.json(tasks);
+  }
+);
+app.get(
+  "/role/:id",
+  authMiddleware(["VIEWER", "EDITOR", "ADMIN", "SUPERADMIN"]),
+  async (req, res) => {
+    const { id } = req.params;
+    const user = await prisma.user.findUnique({
+      where: { id: parseInt(id) },
+      select: { role: true },
+    });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json({ role: user.role });
   }
 );
 app.get("/user", authMiddleware(["SUPERADMIN"]), async (req, res) => {

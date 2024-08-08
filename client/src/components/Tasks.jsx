@@ -14,20 +14,43 @@ import {
   Grid,
   Snackbar,
 } from "@mui/material";
-
 function Tasks() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [tasks, setTasks] = useState([]);
   const [selectedTask, setSelectedTask] = useState(null);
+  const [role, setRole] = useState(localStorage.getItem("role"));
   const navigate = useNavigate();
-  const role = localStorage.getItem("role");
+  const fetchRole = async () => {
+    const userId = localStorage.getItem("userId");
+    try {
+      const response = await axios.get(`http://localhost:5000/role/${userId}`, {
+        withCredentials: true,
+      });
+      setRole(response.data.role);
+    } catch (error) {
+      console.error(
+        "Error fetching role:",
+        error.response ? error.response.data : error.message
+      );
+    }
+  };
+  useEffect(() => {
+    fetchRole();
+
+    const intervalId = setInterval(fetchRole, 60 * 1000);
+    return () => clearInterval(intervalId);
+  }, []);
+
   useEffect(() => {
     const fetchToken = () => {
       try {
         axios.post("http://localhost:5000/refresh-token", null, {
           withCredentials: true,
         });
+        if (response.status === 200) {
+          console.log("Token yenilendi");
+        }
       } catch (error) {
         console.error(
           "Error fetching tasks:",
@@ -38,6 +61,7 @@ function Tasks() {
     const intervalId = setInterval(fetchToken, 9 * 60 * 1000);
     return () => clearInterval(intervalId);
   }, []);
+
   useEffect(() => {
     const fetchTasks = async () => {
       try {
@@ -111,14 +135,11 @@ function Tasks() {
     setContent(task.content);
     setSelectedTask(task);
   };
-  const canViewTasks =
-    role === "VIEWER" ||
-    role === "ADMIN" ||
-    role === "EDITOR" ||
-    role === "SUPERADMIN";
-  const canEditTasks =
-    role === "ADMIN" || role === "EDITOR" || role === "SUPERADMIN";
-  const canDeleteTasks = role === "ADMIN" || role === "SUPERADMIN";
+  const canViewTasks = ["VIEWER", "ADMIN", "EDITOR", "SUPERADMIN"].includes(
+    role
+  );
+  const canEditTasks = ["ADMIN", "EDITOR", "SUPERADMIN"].includes(role);
+  const canDeleteTasks = ["ADMIN", "SUPERADMIN"].includes(role);
   return (
     <>
       {role === "SUPERADMIN" && <User />}

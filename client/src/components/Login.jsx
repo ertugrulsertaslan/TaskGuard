@@ -26,8 +26,8 @@ function Login() {
     };
     try {
       const response = await api.post("/login", data);
+      localStorage.setItem("userId", response.data.userId);
       localStorage.setItem("role", response.data.role);
-
       navigate("/");
     } catch (error) {
       console.error(
