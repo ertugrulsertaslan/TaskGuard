@@ -14,8 +14,7 @@ export default function authMiddleware(requiredRoles = []) {
       req.tokenPayload = payload;
 
       const { userRole } = payload;
-
-      if (requiredRoles.includes(!userRole)) {
+      if (!requiredRoles.includes(userRole)) {
         return res.sendStatus(403);
       }
       next();

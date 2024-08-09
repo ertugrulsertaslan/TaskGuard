@@ -12,7 +12,6 @@ import {
   CardContent,
   CardActions,
   Grid,
-  Snackbar,
 } from "@mui/material";
 function Tasks() {
   const [title, setTitle] = useState("");
@@ -21,6 +20,7 @@ function Tasks() {
   const [selectedTask, setSelectedTask] = useState(null);
   const [role, setRole] = useState(localStorage.getItem("role"));
   const navigate = useNavigate();
+
   const fetchRole = async () => {
     const userId = localStorage.getItem("userId");
     try {
@@ -35,30 +35,35 @@ function Tasks() {
       );
     }
   };
+
   useEffect(() => {
     fetchRole();
 
-    const intervalId = setInterval(fetchRole, 60 * 1000);
+    const intervalId = setInterval(fetchRole, 10 * 1000);
     return () => clearInterval(intervalId);
   }, []);
 
-  useEffect(() => {
-    const fetchToken = () => {
-      try {
-        axios.post("http://localhost:5000/refresh-token", null, {
+  const fetchToken = async () => {
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/refresh-token",
+        null,
+        {
           withCredentials: true,
-        });
-        if (response.status === 200) {
-          console.log("Token yenilendi");
         }
-      } catch (error) {
-        console.error(
-          "Error fetching tasks:",
-          error.response ? error.response.data : error.message
-        );
+      );
+      if (response.status === 200) {
+        console.log("Token renewed");
       }
-    };
-    const intervalId = setInterval(fetchToken, 9 * 60 * 1000);
+    } catch (error) {
+      console.error(
+        "Error fetching tasks:",
+        error.response ? error.response.data : error.message
+      );
+    }
+  };
+  useEffect(() => {
+    const intervalId = setInterval(fetchToken, 1 * 60 * 1000);
     return () => clearInterval(intervalId);
   }, []);
 

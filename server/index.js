@@ -102,14 +102,20 @@ app.post(
       jwt.verify(
         refreshToken,
         process.env.REFRESH_SECRET_TOKEN,
-        (err, user) => {
+        (err, payload) => {
           if (err) return res.sendStatus(403);
-
+          const { userId, userRole } = payload;
+          if (!userRole) {
+            return res
+              .status(400)
+              .json({ error: "User role is not defined in token" });
+          }
           const newAccessToken = jwt.sign(
-            { userId: user.userId, userRole: user.role },
+            { userId, userRole },
             process.env.ACCESS_SECRET_TOKEN,
             { expiresIn: "10m" }
           );
+
           res.cookie("accessToken", newAccessToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
@@ -118,6 +124,7 @@ app.post(
           });
         }
       );
+      return res.sendStatus(200);
     } catch (error) {
       console.error("Error fetching user from database:", error);
       return res.status(500).json({ error: "Internal Server Error" });
