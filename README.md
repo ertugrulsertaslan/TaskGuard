@@ -81,9 +81,9 @@ after running scripts go to http://localhost:5173 with your browser to use the a
 </div>
   <div>
   <div  style="display: flex; justify-content: space-between; width: 100%;"> <h2>Admin Page 🛠️ , Editor Page 📝 and  Viewer Page 👁️ </h2></div>
-    <img src="screenshots/admin-page.png" alt="admin-page" style="width: 34%;">
-    <img src="screenshots/editor-page.png" alt="editor-page" style="width: 30%; margin-right: 4%;">
-    <img src="screenshots/viewer-page.png" alt="viewer-page" style="width: 30%;">
+    <img src="screenshots/admin-page.png" alt="admin-page" style="width: 31%;">
+    <img src="screenshots/editor-page.png" alt="editor-page" style="width: 32%; margin-right: 4%;">
+    <img src="screenshots/viewer-page.png" alt="viewer-page" style="width: 32%;">
    
 </div>
 </div>
