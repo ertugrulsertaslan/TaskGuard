@@ -1,5 +1,19 @@
 # 🗂️ Task Management Application 🚀
 
+### Screenshots 📸
+<div>
+<div>
+  <h2>Super Admin Page 🌟</h2>
+    <img src="screenshots/superadmin-page.png" alt="superadmin-page" style="width: 80%; margin-right: 4%;">
+</div>
+  <div>
+  <div  style="display: flex; justify-content: space-between; width: 100%;"> <h2>Admin Page 🛠️ , Editor Page 📝 and  Viewer Page 👁️ </h2></div>
+    <img src="screenshots/admin-page.png" alt="admin-page" style="width: 31%;">
+    <img src="screenshots/editor-page.png" alt="editor-page" style="width: 32%; margin-right: 4%;">
+    <img src="screenshots/viewer-page.png" alt="viewer-page" style="width: 32%;">
+   
+</div>
+</div>
 
 
 This application is designed for managing tasks with varying user roles and permissions. It provides a structured approach to task management with role-based access control to ensure efficient task handling and user management.
@@ -73,20 +87,6 @@ Prerequisites
 after running scripts go to http://localhost:5173 with your browser to use the app. 🌐
 
 
-### Screenshots 📸
-<div>
-<div>
-  <h2>Super Admin Page 🌟</h2>
-    <img src="screenshots/superadmin-page.png" alt="superadmin-page" style="width: 80%; margin-right: 4%;">
-</div>
-  <div>
-  <div  style="display: flex; justify-content: space-between; width: 100%;"> <h2>Admin Page 🛠️ , Editor Page 📝 and  Viewer Page 👁️ </h2></div>
-    <img src="screenshots/admin-page.png" alt="admin-page" style="width: 31%;">
-    <img src="screenshots/editor-page.png" alt="editor-page" style="width: 32%; margin-right: 4%;">
-    <img src="screenshots/viewer-page.png" alt="viewer-page" style="width: 32%;">
-   
-</div>
-</div>
 
 
 
