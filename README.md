@@ -1,5 +1,7 @@
 # 🗂️ Task Management Application 🚀
 
+This application is designed for managing tasks with varying user roles and permissions. It provides a structured approach to task management with role-based access control to ensure efficient task handling and user management.
+
 ### Screenshots 📸
 <div>
 <div>
@@ -16,7 +18,6 @@
 </div>
 
 
-This application is designed for managing tasks with varying user roles and permissions. It provides a structured approach to task management with role-based access control to ensure efficient task handling and user management.
 
 ## Features
 
